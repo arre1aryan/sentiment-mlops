@@ -1,0 +1,29 @@
+# Things to be ignored by git
+
+
+# Virtual environment
+.venv/
+
+# Data files (too large for GitHub)
+data/*.csv
+
+# MLflow tracking
+mlruns/
+
+# Models output
+models/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest cache
+.pytest_cache/
+.coverage
