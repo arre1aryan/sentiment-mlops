@@ -1,0 +1,63 @@
+name: Train and Register Model
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+env:
+  MLFLOW_TRACKING_URI: ./mlruns
+  PYTHONPATH: .
+jobs:
+  train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest tests/ -v
+
+      - name: Download dataset
+        run: python src/data_prep.py
+
+      - name: Train model
+        run: python src/train.py
+
+      - name: Quality gate
+        run: |
+          python - <<'EOF'
+          import json
+          import sys
+
+          with open("models/metrics.json") as f:
+              metrics = json.load(f)
+
+          accuracy = metrics["accuracy"]
+          threshold = 0.85
+
+          print(f"Model accuracy : {accuracy}")
+          print(f"Threshold      : {threshold}")
+
+          if accuracy >= threshold:
+              print("Quality gate PASSED - model promoted")
+          else:
+              print("Quality gate FAILED - model rejected")
+              sys.exit(1)
+          EOF
+
+      - name: Upload metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-metrics
+          path: models/metrics.json
